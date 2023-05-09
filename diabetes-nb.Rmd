@@ -1,5 +1,5 @@
 ---
-title: "cc-fraud-models"
+title: "diabetes-models"
 author: "David Riina"
 date: "2023-05-09"
 output: pdf_document
@@ -67,7 +67,7 @@ plot(roc_curve, main = "ROC Curve", xlim = c(1,0))
 library(rpart)
 library(rpart.plot)
 
-#create decision tree model
+#DECISION TREE MODEL
 model <- rpart(diabetes ~ ., data = dftrain, method = "class")
 
 #make predictions on the test set
