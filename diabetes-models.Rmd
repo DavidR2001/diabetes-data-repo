@@ -1,0 +1,118 @@
+---
+title: "diabetes-models"
+author: "David Riina"
+date: "2023-05-09"
+output: pdf_document
+---
+
+```{r}
+library(readr)
+df <- read_csv("C:/Users/david/Downloads/archive (5).zip")
+View(df)
+#correct mistakes in the smoking_history column
+df$smoking_history <- ifelse(df$smoking_history == "ever", "never", df$smoking_history)
+
+#data preprocessing
+df$gender <- as.factor(df$gender)
+df$hypertension <- as.factor(df$hypertension)
+df$heart_disease <- as.factor(df$heart_disease)
+df$smoking_history <- as.factor(df$smoking_history)
+df$diabetes <- as.factor(df$diabetes)
+
+
+summary(df)
+
+#split into training and testing
+set.seed(123)
+inTrain <- sample(nrow(df), 0.7*nrow(df))
+
+dftrain <- df[inTrain,] # with 70% of the data
+dftest <- df[-inTrain,] # with 30% of the data
+
+```
+
+
+
+
+```{r}
+# NAIVE BAYES MODEL
+#import library for naive bayes
+library(e1071)
+library(pROC)
+
+#create model and make class predictions
+model <- naiveBayes(diabetes~., data = dftrain)
+prediction <- predict(model, newdata = dftest)
+#confusion matrix
+print(cm1 <- table(dftest$diabetes, prediction, dnn = list('actual','predicted')))
+acc1 <- sum(cm1[1,1],cm1[2,2])/sum(cm1)
+sen1 <- cm1[2,2]/sum(cm1[2,1],cm1[2,2])
+spec1 <- cm1[1,1]/sum(cm1[1,2], cm1[1,1])
+
+cat("Accuracy:", acc1,"\n")
+cat("Sensitivity:", sen1,"\n")
+cat("Specificity:", spec1)
+
+#get class probabilities
+class_prob<- predict(model, newdata = dftest[,-9], type="raw")
+
+#create curve with actual vs predicted probabilities of success case
+roc_curve <- roc(dftest$diabetes, class_prob[,2])
+
+# Plotting the ROC curve
+plot(roc_curve, main = "ROC Curve", xlim = c(1,0))
+```
+
+```{r}
+library(rpart)
+library(rpart.plot)
+
+#create decision tree model
+model <- rpart(diabetes ~ ., data = dftrain, method = "class")
+
+#make predictions on the test set
+predictions <- predict(model, newdata = dftest, type = "class")
+
+#calculate the confusion matrix and error rate
+print(cm2 <- table(predictions, dftest$diabetes))
+acc2 <- sum(cm2[1,1],cm2[2,2])/sum(cm2)
+sen2 <- cm2[2,2]/sum(cm2[2,1],cm2[2,2])
+spec2 <- cm2[1,1]/sum(cm2[1,2], cm2[1,1])
+
+cat("Accuracy:", acc2,"\n")
+cat("Sensitivity:", sen2,"\n")
+cat("Specificity:", spec2)
+
+
+#plot the decision tree
+rpart.plot(model)
+
+```
+
+```{r}
+#LOGISTIC MODEL
+logmodel <- glm(diabetes~., family = "binomial", data = dftrain)
+summary(logmodel)
+
+#make predictions and create confusion matrix
+test.predictedprob<- predict(logmodel, newdata= dftest, type = "response")
+test.predict<- ifelse(test.predictedprob >= 0.5, 1, 0)
+cm3<- table(dftest$diabetes, test.predict, dnn = c("actual", "predicted"))
+print(cm3)
+
+acc3 <- sum(cm3[1,1],cm3[2,2])/sum(cm3)
+sen3 <- cm3[2,2]/sum(cm3[2,1],cm3[2,2])
+spec3 <- cm3[1,1]/sum(cm3[1,2], cm3[1,1])
+
+cat("Accuracy:", acc3,"\n")
+cat("Sensitivity:", sen3,"\n")
+cat("Specificity:", spec3)
+
+#create ROC curve
+roc_curve3 <- roc(dftest$diabetes, test.predictedprob)
+
+# Plotting the ROC curve
+plot(roc_curve3, main = "ROC Curve")
+
+```
+
