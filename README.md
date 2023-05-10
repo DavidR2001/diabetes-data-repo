@@ -1,0 +1,2 @@
+# my-repo
+The diabetes dataset I used is a collection of 100,000 records of medical and demographic data from patients. The data includes features such as age, gender, body mass index (BMI), hypertension, heart disease, smoking history, HbA1c level, and blood glucose level. In my repository I have included some preliminary EDA done in Tableau, as well as three different maching learning models I ran in R. 
